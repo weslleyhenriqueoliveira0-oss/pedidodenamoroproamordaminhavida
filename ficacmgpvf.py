@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import webbrowser
 from pathlib import Path
 
 def verificar_e_instalar(pacote):
@@ -66,14 +67,14 @@ img_sp2 = carregar_imagem("download.png", size=(200, 150))
 img_dog = carregar_imagem("dog.png", size=(180, 150))
 
 linhas = [
-    ("Kissed that first night... ", 0.08, 0.5),
-    ("One last kiss ", 0.12, 0.5),
-    ("I love you like an alcoholic ", 0.08, 1),
-    ("One last kiss ", 0.12, 0.5),
-    ("I love you like a statuette ", 0.08, 1),
-    ("One last kiss ", 0.12, 0.5),
-    ("I need you like I need a broken leg... ", 0.08, 1),
-    ("Eu te amo como eu amo remédios ", 0.08, 1),
+    ("kissed that first night... ", 0.06, 0.2),
+    ("one last kiss ", 0.07, 0.2),
+    ("i love you like an alcoholic ", 0.06, 0.2),
+    ("one last kiss ", 0.07, 0.2),
+    ("i love you like a statuette ", 0.05, 0.2),
+    ("one last kiss ", 0.07, 0.2),
+    ("i need you like i need a broken leg... ", 0.06, 0.2),
+    ("eu te amo como eu amo remédios ", 0.06, 0.2),
     (":)", 0.2, 1)
 ]
 
@@ -153,7 +154,7 @@ def abrir_carta():
         carta,
         text="para a biby com muito carinho do twelas  💗",
         font=("Georgia", 22, "bold"),
-        text_color=rosa
+        text_color=rosa,
     )
     titulo.pack(pady=(5, 10))
 
@@ -229,9 +230,11 @@ def tela_pergunta():
     nao.pack(side="left", padx=10)
 
 def aceitou():
-    resultado("nao acreditooooooooo, vou comprar as alianças semana que vemmm:))", imagem=img_dog)
+    webbrowser.open("https://open.spotify.com/playlist/5uoHvATQK6bq1EeMplKLrf")
+    resultado(")", imagem=img_dog)
 
 def recusou():
+    webbrowser.open("https://open.spotify.com/playlist/342gh4BmsgkvInyVX5cdw7")
     resultado("espero que vc saiba que vc acabo com todos os meus sonhos e expectativas D:", imagem=img_sp1)
 
 def resultado(mensagem, imagem):
