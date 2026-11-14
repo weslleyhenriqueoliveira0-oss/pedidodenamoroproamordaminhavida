@@ -1,256 +1,732 @@
-import subprocess
+#finalmente vou usar os ensimantos do roger pra alguma coisa 
+import os
 import sys
+import random
+import subprocess
+import importlib
 import webbrowser
-from pathlib import Path
+import tkinter as tk
 
-def verificar_e_instalar(pacote):
+
+def verificar_e_instalar(modulo, pacote=None):
     try:
-        __import__(pacote)
+        importlib.import_module(modulo)
     except ImportError:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", pacote])
+        subprocess.check_call([
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            pacote or modulo
+        ])
 
 verificar_e_instalar("customtkinter")
-verificar_e_instalar("pillow")
+verificar_e_instalar("PIL", "pillow")
+verificar_e_instalar("pygame")
 
 import customtkinter as ctk
 from PIL import Image
-import os
+import pygame
+
 
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 
 app = ctk.CTk()
-app.title("com muito carinho para a gaby <3")
-app.geometry("600x650")
+app.title("uma cartinha para a gaby <3")
+app.geometry("700x760")
 app.resizable(False, False)
 app.configure(fg_color="#F8C8DC")
 
-rosa = "#E88EAF"
-branco = "#FFF8FC"
-texto_cor = "#75445A"
+ROSA = "#E88EAF"
+ROSA_CLARO = "#F8C8DC"
+BRANCO = "#FFF8FC"
+VINHO = "#75445A"
+ROSA_ESCURO = "#D8759B"
 
-image_path = os.path.dirname(os.path.realpath(__file__))
+PASTA = os.path.dirname(os.path.abspath(__file__))
 
-def carregar_imagem(filename, size=(150, 150), bg_color=(248, 200, 220)):
-    path_completo = os.path.join(image_path, filename)
-    
-    if not os.path.exists(path_completo):
-        for ext in ['.png', '.jpg', '.jpeg']:
-            if os.path.exists(path_completo + ext):
-                path_completo += ext
+
+musica_tocando = False
+musica_disponivel = False
+
+geracao_texto = 0
+indice_linha = 0
+texto_completo = False
+
+botao_musica = None
+texto_dialogo = None
+botao_proximo = None
+
+#eu nao to de rege bait viado, se ela recusar essa prr eu vou chorar e me matar e fds
+
+try:
+    pygame.mixer.init()
+
+    caminho_musica = os.path.join(PASTA, "musica.mp3")
+
+    if os.path.exists(caminho_musica):
+        pygame.mixer.music.load(caminho_musica)
+        pygame.mixer.music.set_volume(0.35)
+        musica_disponivel = True
+
+except Exception as erro:
+    print("Áudio indisponível:", erro)
+
+
+def alternar_musica():
+    global musica_tocando
+
+    if not musica_disponivel:
+        return
+
+    if musica_tocando:
+        pygame.mixer.music.pause()
+        musica_tocando = False
+
+    else:
+        pygame.mixer.music.unpause()
+
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.play(-1)
+
+        musica_tocando = True
+
+    mostrar_musica()
+
+
+def mostrar_musica():
+    global botao_musica
+
+    botao_musica = ctk.CTkButton(
+        app,
+        text="♫ Desligar música" if musica_tocando else "♫ Ligar música",
+        command=alternar_musica,
+        width=130,
+        height=32,
+        corner_radius=15,
+        fg_color=BRANCO,
+        hover_color="#F0DCE5",
+        text_color=VINHO,
+        font=("Arial", 12, "bold")
+    )
+
+    botao_musica.place(
+        relx=0.97,
+        rely=0.035,
+        anchor="ne"
+    )
+
+
+
+def carregar_imagem(nome, tamanho=(180, 150)):
+
+    caminho = os.path.join(PASTA, nome)
+
+    if not os.path.exists(caminho):
+
+        base, extensao = os.path.splitext(caminho)
+
+        for ext in [".png", ".jpg", ".jpeg"]:
+
+            if os.path.exists(base + ext):
+                caminho = base + ext
                 break
 
     try:
-        pil_image = Image.open(path_completo)
-        
-        if pil_image.mode in ("RGBA", "LA") or (pil_image.mode == "P" and "transparency" in pil_image.info):
-            pil_image = pil_image.convert("RGBA")
-            fundo = Image.new("RGBA", pil_image.size, bg_color + (255,))
-            pil_image = Image.alpha_composite(fundo, pil_image).convert("RGB")
-        else:
-            pil_image = pil_image.convert("RGB")
 
-        pil_image = pil_image.resize(size, Image.Resampling.LANCZOS)
+        imagem = Image.open(caminho).convert("RGBA")
 
-        return ctk.CTkImage(light_image=pil_image, dark_image=pil_image, size=size)
-        
-    except Exception as e:
-        print(f"Erro ao carregar {filename}: {e}. Usando placeholder.")
-        placeholder = Image.new('RGB', size, bg_color)
-        return ctk.CTkImage(light_image=placeholder, dark_image=placeholder, size=size)
-
-img_cat1 = carregar_imagem("gatoflor.png", size=(180, 150)) 
-img_cat2 = carregar_imagem("gatofone", size=(160, 140)) 
-img_cat3 = carregar_imagem("cat3.jpg", size=(180, 150)) 
-img_sp1 = carregar_imagem("emo.png", size=(200, 150))
-img_sp2 = carregar_imagem("download.png", size=(200, 150))
-img_dog = carregar_imagem("dog.png", size=(180, 150))
-
-linhas = [
-    ("kissed that first night... ", 0.06, 0.2),
-    ("one last kiss ", 0.07, 0.2),
-    ("i love you like an alcoholic ", 0.06, 0.2),
-    ("one last kiss ", 0.07, 0.2),
-    ("i love you like a statuette ", 0.05, 0.2),
-    ("one last kiss ", 0.07, 0.2),
-    ("i need you like i need a broken leg... ", 0.06, 0.2),
-    ("eu te amo como eu amo remédios ", 0.06, 0.2),
-    (":)", 0.2, 1)
-]
-
-def escrever_texto(label, linhas, indice=0, letra=0):
-    if indice >= len(linhas):
-        return
-
-    frase, velocidade, pausa = linhas[indice]
-    texto_atual = label.cget("text")
-
-    if letra < len(frase):
-        label.configure(text=texto_atual + frase[letra])
-        label.after(
-            max(1, int(velocidade * 1000)),
-            lambda: escrever_texto(label, linhas, indice, letra + 1)
+        imagem.thumbnail(
+            tamanho,
+            Image.Resampling.LANCZOS
         )
-    else:
-        label.after(
-            int(pausa * 1000),
-            lambda: escrever_texto(label, linhas, indice + 1, 0)
+
+        fundo = Image.new(
+            "RGBA",
+            tamanho,
+            ROSA_CLARO
         )
+
+        x = (tamanho[0] - imagem.width) // 2
+        y = (tamanho[1] - imagem.height) // 2
+
+        fundo.alpha_composite(imagem, (x, y))
+
+        return ctk.CTkImage(
+            light_image=fundo,
+            dark_image=fundo,
+            size=tamanho
+        )
+
+    except Exception as erro:
+
+        print(f"Erro ao carregar {nome}: {erro}")
+
+        placeholder = Image.new(
+            "RGB",
+            tamanho,
+            ROSA_CLARO
+        )
+
+        return ctk.CTkImage(
+            light_image=placeholder,
+            dark_image=placeholder,
+            size=tamanho
+        )
+
+
+img_cat1 = carregar_imagem("gatoflor.png", (190, 160))
+img_cat2 = carregar_imagem("gatofone", (170, 145))
+img_cat3 = carregar_imagem("cat3.jpg", (190, 160))
+img_sp1 = carregar_imagem("emo.png", (200, 150))
+img_dog = carregar_imagem("dog.png", (190, 160))
+
+
+
+canvas = tk.Canvas(
+    app,
+    bg=ROSA_CLARO,
+    highlightthickness=0
+)
+
+canvas.place(
+    relwidth=1,
+    relheight=1
+)
+
+canvas.tk.call("lower", canvas._w)
+
+coracoes = []
+
+for i in range(22):
+
+    x = random.randint(10, 680)
+    y = random.randint(0, 760)
+
+    simbolo = random.choice([
+        "♡", "♥", "✧", "⋆"
+    ])
+
+    item = canvas.create_text(
+        x,
+        y,
+        text=simbolo,
+        fill=random.choice([
+            "#FFFFFF",
+            "#E88EAF",
+            "#F3A9C5"
+        ]),
+        font=("Arial", random.randint(12, 23))
+    )
+
+    coracoes.append(item)
+
+
+def animar_coracoes():
+
+    for item in coracoes:
+
+        x, y = canvas.coords(item)
+
+        canvas.move(
+            item,
+            0,
+            random.uniform(0.5, 1.5)
+        )
+
+        if y > 770:
+
+            canvas.coords(
+                item,
+                random.randint(10, 680),
+                -10
+            )
+
+    app.after(45, animar_coracoes)
+
+
+
+def criar_titulo(pai, texto, tamanho=28):
+
+    return ctk.CTkLabel(
+        pai,
+        text=texto,
+        font=("Georgia", tamanho, "bold"),
+        text_color=VINHO
+    )
+
+
+def criar_botao(pai, texto, comando, largura=220):
+
+    return ctk.CTkButton(
+        pai,
+        text=texto,
+        command=comando,
+        width=largura,
+        height=45,
+        corner_radius=18,
+        fg_color=ROSA,
+        hover_color=ROSA_ESCURO,
+        text_color=BRANCO,
+        font=("Arial", 15, "bold"),
+        cursor="hand2"
+    )
+#pedir pro mateus como fazer pra limpar a tela
 
 def limpar_tela():
+
+    global geracao_texto
+
+    geracao_texto += 1
+
     for widget in app.winfo_children():
-        widget.destroy()
+
+        if widget != canvas:
+            widget.destroy()
+
 
 def tela_inicial():
+
     limpar_tela()
+    mostrar_musica()
 
-    lbl_img_inicial = ctk.CTkLabel(app, text="", image=img_cat1)
-    lbl_img_inicial.pack(pady=(35, 5))
-
-    titulo = ctk.CTkLabel(
+    subtitulo = ctk.CTkLabel(
         app,
-        text="Tenho algo para você...",
-        font=("Georgia", 28, "bold"),
-        text_color=texto_cor
+        text="✧ uma pequena surpresa ✧",
+        font=("Georgia", 15, "italic"),
+        text_color=VINHO
     )
-    titulo.pack(pady=(5, 20))
+
+    subtitulo.pack(pady=(75, 10))
+
+    imagem = ctk.CTkLabel(
+        app,
+        text="",
+        image=img_cat1
+    )
+
+    imagem.pack(pady=10)
+
+    titulo = criar_titulo(
+        app,
+        "Tenho algo para você...",
+        30
+    )
+
+    titulo.pack(pady=15)
+
+    descricao = ctk.CTkLabel(
+        app,
+        text="Preparei uma coisinha especial com muito carinho.",
+        font=("Georgia", 14),
+        text_color=VINHO
+    )
+
+    descricao.pack(pady=5)
 
     envelope = ctk.CTkButton(
         app,
         text="💌",
         font=("Arial", 90),
         fg_color="transparent",
-        hover_color="#F8C8DC",
-        text_color=texto_cor,
-        command=abrir_carta
+        hover_color=ROSA_CLARO,
+        text_color=VINHO,
+        command=abrir_carta,
+        cursor="hand2"
     )
-    envelope.pack(pady=10)
 
-    instrucoes = ctk.CTkLabel(
+    envelope.pack(pady=20)
+
+    botao = criar_botao(
         app,
-        text="Clique no envelope para abrir sua carta",
-        font=("Arial", 16),
-        text_color=texto_cor
+        "Abrir minha cartinha ♡",
+        abrir_carta
     )
-    instrucoes.pack(pady=10)
+
+    botao.pack(pady=10)
+
+    rodape = ctk.CTkLabel(
+        app,
+        text="feito com carinho ♡",
+        font=("Georgia", 12, "italic"),
+        text_color=VINHO
+    )
+
+    rodape.pack(
+        side="bottom",
+        pady=25
+    )
+
+
+linhas = [
+
+    "eu acho que ta bem obvio que eu so tenho olhos pra ti ne",
+
+    "pra tudo que eu olho eu te vejo se eu vejo valorant eu lembro de ti se eu vejo uma flor eu lembro de ti se eu vejo um lanche eu lembro de ti",
+
+    "Talvez eu não consiga expressar tudo em palavras,",
+
+    "mas quero que saiba que você é muito especial.",
+
+    "Gosto muito de ter você por perto.",
+
+    "como vc sabe eu sou um fudido pra falar pra ti o quanto eu gosto de ti mas eu quero q vc saiba que eu fico o dia inteiro pensando em vc",
+
+    "se vc quiser eu to pronto pra assistir star wars com vc.♡",
+
+    "com muito carinho, twutwu"
+
+]
+
+
+def escrever_texto():
+
+    global texto_completo
+
+    texto_completo = False
+
+    texto_dialogo.configure(text="")
+
+    frase = linhas[indice_linha]
+
+    geracao_atual = geracao_texto
+
+    botao_proximo.configure(
+        text="Pular mensagem ♡"
+    )
+
+    def digitar(letra=0):
+
+        global texto_completo
+
+        if geracao_atual != geracao_texto:
+            return
+
+        if letra < len(frase):
+
+            texto_dialogo.configure(
+                text=frase[:letra + 1]
+            )
+
+            app.after(
+                35,
+                lambda: digitar(letra + 1)
+            )
+
+        else:
+
+            texto_completo = True
+
+            botao_proximo.configure(
+                text="Próxima mensagem ♡"
+            )
+
+    digitar()
+
+
+def proximo_dialogo():
+
+    global indice_linha, texto_completo
+
+    if not texto_completo:
+
+        texto_dialogo.configure(
+            text=linhas[indice_linha]
+        )
+
+        texto_completo = True
+
+        botao_proximo.configure(
+            text="Próxima mensagem ♡"
+        )
+
+        return
+
+    indice_linha += 1
+
+    if indice_linha >= len(linhas):
+
+        tela_pergunta()
+        return
+
+    escrever_texto()
+
+
+
 
 def abrir_carta():
+
+    global indice_linha
+    global texto_dialogo
+    global botao_proximo
+
+    indice_linha = 0
+
     limpar_tela()
+    mostrar_musica()
 
     carta = ctk.CTkFrame(
         app,
-        fg_color=branco,
-        corner_radius=20,
-        width=520,
-        height=550
+        width=580,
+        height=610,
+        fg_color=BRANCO,
+        corner_radius=25,
+        border_width=2,
+        border_color="#F1B4CA"
     )
-    carta.pack(expand=True, padx=30, pady=20)
+
+    carta.place(
+        relx=0.5,
+        rely=0.53,
+        anchor="center"
+    )
+
     carta.pack_propagate(False)
 
-    lbl_img_carta = ctk.CTkLabel(carta, text="", image=img_cat2)
-    lbl_img_carta.pack(pady=(15, 5))
-
-    titulo = ctk.CTkLabel(
+    ctk.CTkLabel(
         carta,
-        text="para a biby com muito carinho do twelas  💗",
-        font=("Georgia", 22, "bold"),
-        text_color=rosa,
-    )
-    titulo.pack(pady=(5, 10))
+        text="♡ uma cartinha especial ♡",
+        font=("Georgia", 14, "italic"),
+        text_color=ROSA_ESCURO
+    ).pack(pady=(20, 5))
 
-    texto = ctk.CTkLabel(
+    ctk.CTkLabel(
         carta,
         text="",
-        font=("Georgia", 15),
-        text_color=texto_cor,
-        justify="center",
-        wraplength=450
-    )
-    texto.pack(pady=10)
+        image=img_cat2
+    ).pack(pady=5)
 
-    escrever_texto(texto, linhas)
-
-    botao = ctk.CTkButton(
+    criar_titulo(
         carta,
-        text="Continuar 💗",
-        fg_color=rosa,
-        hover_color="#D8759B",
-        command=tela_pergunta
+        "Para a Biby 💗",
+        26
+    ).pack(pady=10)
+
+    ctk.CTkLabel(
+        carta,
+        text="com muito carinho, do Twelas",
+        font=("Georgia", 14, "italic"),
+        text_color=ROSA_ESCURO
+    ).pack()
+
+    texto_dialogo = ctk.CTkLabel(
+        carta,
+        text="",
+        font=("Georgia", 17),
+        text_color=VINHO,
+        wraplength=460,
+        justify="center",
+        height=110
     )
-    botao.pack(side="bottom", pady=15)
+
+    texto_dialogo.pack(
+        pady=20,
+        padx=35
+    )
+
+    botao_proximo = criar_botao(
+        carta,
+        "Pular mensagem ♡",
+        proximo_dialogo
+    )
+
+    botao_proximo.pack(
+        side="bottom",
+        pady=25
+    )
+
+    escrever_texto()
+
+
 
 def tela_pergunta():
+
     limpar_tela()
+    mostrar_musica()
 
-    lbl_img_pergunta = ctk.CTkLabel(app, text="", image=img_cat3)
-    lbl_img_pergunta.pack(pady=(35, 5))
-
-    titulo = ctk.CTkLabel(
+    ctk.CTkLabel(
         app,
-        text="Então...",
-        font=("Georgia", 30, "bold"),
-        text_color=texto_cor
-    )
-    titulo.pack(pady=(5, 15))
+        text="♡",
+        font=("Arial", 35),
+        text_color=ROSA_ESCURO
+    ).pack(pady=(65, 0))
+
+    ctk.CTkLabel(
+        app,
+        text="",
+        image=img_cat3
+    ).pack(pady=10)
+
+    criar_titulo(
+        app,
+        "Então...",
+        34
+    ).pack(pady=15)
 
     pergunta = ctk.CTkLabel(
         app,
         text="Você aceita namorar comigo?",
-        font=("Georgia", 22),
-        text_color=texto_cor
+        font=("Georgia", 23),
+        text_color=VINHO
     )
-    pergunta.pack(pady=10)
 
-    frame_botoes = ctk.CTkFrame(app, fg_color="transparent")
-    frame_botoes.pack(pady=10)
+    pergunta.pack(pady=15)
 
-    sim = ctk.CTkButton(
+    ctk.CTkLabel(
+        app,
+        text="Escolha com o coração ♡",
+        font=("Georgia", 14, "italic"),
+        text_color=ROSA_ESCURO
+    ).pack(pady=5)
+
+    frame_botoes = ctk.CTkFrame(
+        app,
+        fg_color="transparent"
+    )
+
+    frame_botoes.pack(pady=30)
+
+    criar_botao(
         frame_botoes,
-        text="SIM! 💗",
-        font=("Arial", 18, "bold"),
-        fg_color=rosa,
-        hover_color="#D8759B",
-        width=180,
-        height=45,
-        command=aceitou
+        "SIM! 💗",
+        aceitou,
+        190
+    ).pack(
+        side="left",
+        padx=10
     )
-    sim.pack(side="left", padx=10)
 
     nao = ctk.CTkButton(
         frame_botoes,
         text="Não",
-        font=("Arial", 15),
-        fg_color=branco,
+        command=recusou,
+        width=190,
+        height=45,
+        corner_radius=18,
+        fg_color=BRANCO,
         hover_color="#F0DCE5",
-        text_color=texto_cor,
-        width=180,
-        height=40,
-        command=recusou
+        text_color=VINHO,
+        font=("Arial", 15, "bold"),
+        cursor="hand2"
     )
-    nao.pack(side="left", padx=10)
+
+    nao.pack(
+        side="left",
+        padx=10
+    )
+
+
+
+
+def abrir_playlist(url):
+
+    try:
+        webbrowser.open(url)
+
+    except Exception as erro:
+        print("Não foi possível abrir a playlist:", erro)
+
 
 def aceitou():
-    webbrowser.open("https://open.spotify.com/playlist/5uoHvATQK6bq1EeMplKLrf")
-    resultado(")", imagem=img_dog)
+
+    abrir_playlist(
+        "https://open.spotify.com/playlist/5uoHvATQK6bq1EeMplKLrf"
+    )
+
+    resultado(
+        "EU NÃO ACREDITO ME BEIJA DNV PORAAAAAAAAAAA!! 💗",
+        "vai ter que conhcer meus pais agr rsrsrsrrsl!",
+        img_dog
+    )
+
 
 def recusou():
-    webbrowser.open("https://open.spotify.com/playlist/342gh4BmsgkvInyVX5cdw7")
-    resultado("espero que vc saiba que vc acabo com todos os meus sonhos e expectativas D:", imagem=img_sp1)
 
-def resultado(mensagem, imagem):
+    abrir_playlist(
+        "https://open.spotify.com/playlist/342gh4BmsgkvInyVX5cdw7"
+    )
+
+    resultado(
+        "Tudo bem... ♡",
+        "vc acabou cmg vou chorar um pouco mas td bem amo-te msm assim disgraça",
+        img_sp1
+    )
+
+
+
+
+def resultado(titulo, mensagem, imagem):
+
     limpar_tela()
+    mostrar_musica()
 
-    lbl_img_resultado = ctk.CTkLabel(app, text="", image=imagem)
-    lbl_img_resultado.pack(pady=(80, 10))
+    ctk.CTkLabel(
+        app,
+        text="✧ ♡ ✧",
+        font=("Arial", 35),
+        text_color=ROSA_ESCURO
+    ).pack(pady=(80, 10))
 
-    final = ctk.CTkLabel(
+    ctk.CTkLabel(
+        app,
+        text="",
+        image=imagem
+    ).pack(pady=15)
+
+    criar_titulo(
+        app,
+        titulo,
+        27
+    ).pack(pady=15)
+
+    ctk.CTkLabel(
         app,
         text=mensagem,
-        font=("Georgia", 20, "bold"),
-        text_color=texto_cor,
-        wraplength=500
-    )
-    final.pack(pady=(10, 20))
+        font=("Georgia", 17),
+        text_color=VINHO,
+        wraplength=500,
+        justify="center"
+    ).pack(pady=15)
 
+    criar_botao(
+        app,
+        "Voltar ao início ♡",
+        tela_inicial
+    ).pack(pady=25)
+
+    ctk.CTkLabel(
+        app,
+        text="feito com carinho pelo Twelas",
+        font=("Georgia", 12, "italic"),
+        text_color=ROSA_ESCURO
+    ).pack(
+        side="bottom",
+        pady=25
+    )
+
+
+
+def fechar_aplicativo():
+
+    try:
+        pygame.mixer.music.stop()
+        pygame.mixer.quit()
+
+    except Exception:
+        pass
+
+    app.destroy()
+
+
+app.protocol(
+    "WM_DELETE_WINDOW",
+    fechar_aplicativo
+)
+
+animar_coracoes()
 tela_inicial()
+
 app.mainloop()
+#nunca mais quero codar na minha vida
+#maldita hora que eu inventei de fazer isso sem chat
