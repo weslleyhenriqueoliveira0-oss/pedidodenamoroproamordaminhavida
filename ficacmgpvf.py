@@ -371,7 +371,7 @@ linhas = [
 
     "Gosto muito de ter você por perto.",
 
-    "como vc sabe eu sou um fudido pra falar pra ti o quanto eu gosto de ti mas eu quero q vc saiba que eu fico o dia inteiro pensando em vc",
+    "como vc ja deve ter percebido eu sou um bobo completamente apaixonado em ti, eu so quero ficar perto de ti e ver vc feliz",
 
     "se vc quiser eu to pronto pra assistir star wars com vc.♡",
 
@@ -653,58 +653,64 @@ def recusou():
         img_sp1
     )
 
-
-
-
 def resultado(titulo, mensagem, imagem):
 
     limpar_tela()
     mostrar_musica()
 
-    ctk.CTkLabel(
+    quadro = ctk.CTkFrame(
         app,
+        width=620,
+        height=650,
+        fg_color="transparent"
+    )
+    quadro.place(relx=0.5, rely=0.53, anchor="center")
+    quadro.pack_propagate(False)
+
+    ctk.CTkLabel(
+        quadro,
         text="✧ ♡ ✧",
         font=("Arial", 35),
         text_color=ROSA_ESCURO
-    ).pack(pady=(80, 10))
+    ).pack(pady=(15, 5))
 
     ctk.CTkLabel(
-        app,
+        quadro,
         text="",
         image=imagem
-    ).pack(pady=15)
-
-    criar_titulo(
-        app,
-        titulo,
-        27
-    ).pack(pady=15)
+    ).pack(pady=8)
 
     ctk.CTkLabel(
-        app,
-        text=mensagem,
-        font=("Georgia", 17),
+        quadro,
+        text=titulo,
+        font=("Georgia", 24, "bold"),
         text_color=VINHO,
-        wraplength=500,
+        wraplength=560,
         justify="center"
-    ).pack(pady=15)
+    ).pack(pady=8, padx=20)
+
+    ctk.CTkLabel(
+        quadro,
+        text=mensagem,
+        font=("Georgia", 16),
+        text_color=VINHO,
+        wraplength=520,
+        width=560,
+        justify="center"
+    ).pack(pady=10, padx=25)
 
     criar_botao(
-        app,
+        quadro,
         "Voltar ao início ♡",
         tela_inicial
-    ).pack(pady=25)
+    ).pack(pady=12)
 
     ctk.CTkLabel(
-        app,
+        quadro,
         text="feito com carinho pelo Twelas",
         font=("Georgia", 12, "italic"),
         text_color=ROSA_ESCURO
-    ).pack(
-        side="bottom",
-        pady=25
-    )
-
+    ).pack(side="bottom", pady=10)
 
 
 def fechar_aplicativo():
